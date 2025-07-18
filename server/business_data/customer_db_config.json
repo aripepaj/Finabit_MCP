@@ -1,0 +1,4 @@
+{
+    "finabit": "DRIVER={ODBC Driver 18 for SQL Server};SERVER=192.168.199.30;DATABASE=FINA;UID=fina;PWD=FIna10",
+    "acme_corp": "DRIVER={...};SERVER=...;DATABASE=...;UID=...;PWD=..."
+}
