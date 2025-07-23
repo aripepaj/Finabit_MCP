@@ -31,6 +31,10 @@
     {
       "name": "get_purchases",
       "description": "Returns purchases for a date range by calling the API with FromDate and ToDate."
+    },
+    {
+      "name": "get_items",
+      "description": "Returns all items from the inventory/catalog."
     }
 ],
   "license": "MIT"

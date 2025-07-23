@@ -7,6 +7,7 @@ import mcp.types as types
 
 from tools.sales import get_sales
 from tools.purchases import get_purchases
+from tools.items import get_items
 from tools.faq import ask_faq_api 
 
 notification_options = SimpleNamespace()
@@ -18,7 +19,7 @@ server = Server("finabit")
 async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
-            name="ask_faq",
+            name="ask",
             description="Finds and returns the best-matching FAQ answer for a user's question about Finabit. Uses semantic search for accurate retrieval.",
             inputSchema={
                 "type": "object",
@@ -54,6 +55,18 @@ async def handle_list_tools() -> list[types.Tool]:
                 },
                 "required": ["from_date", "to_date"]
             }
+        ),
+        types.Tool(
+            name="get_items",
+            description="Returns items (artikujt) from the inventory/catalog with pagination support.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "page_number": {"type": "integer", "description": "Page number (default: 1)"},
+                    "page_size": {"type": "integer", "description": "Items per page (default: 20)"}
+                },
+                "required": []
+            }
         )
     ]
 
@@ -78,6 +91,12 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         from_date = arguments.get("from_date")
         to_date = arguments.get("to_date")
         reply = get_purchases(from_date, to_date)
+        return [types.TextContent(type="text", text=reply)]
+    
+    elif name == "get_items":
+        page_number = arguments.get("page_number", 1)
+        page_size = arguments.get("page_size", 20)
+        reply = get_items(page_number, page_size)
         return [types.TextContent(type="text", text=reply)]
     else:
         raise ValueError(f"Unknown tool: {name}")
