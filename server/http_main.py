@@ -147,7 +147,7 @@ class CallToolBody(BaseModel):
 async def call_tool(body: CallToolBody):
     return {"content": f"Ran tool {body.name} with arguments {body.arguments}"}
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {"status": "ok", "message": "Finabit MCP server is running."}
 
