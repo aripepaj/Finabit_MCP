@@ -1,4 +1,4 @@
-from service.items_service import get_items as get_items_data, format_items_data
+from ..service.items_service import get_items as get_items_data, format_items_data
 
 def get_items(page_number=1, page_size=20):
     """

@@ -1,4 +1,4 @@
-from service.purchase_service import get_purchases_for_date, format_purchases_data
+from ..service.purchase_service import get_purchases_for_date, format_purchases_data
 
 def get_purchases(from_date, to_date):
     """

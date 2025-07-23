@@ -1,5 +1,5 @@
 import requests
-from tools.config import API_BASE_URL
+from ..tools.config import API_BASE_URL
 
 class ItemLookup:
     """Represents an item from the GetAllItems API with pagination"""

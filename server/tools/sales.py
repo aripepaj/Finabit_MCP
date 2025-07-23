@@ -1,4 +1,4 @@
-from service.sales_service import get_sales_for_date, format_sales_data
+from ..service.sales_service import get_sales_for_date, format_sales_data
 
 def get_sales(from_date, to_date):
     """
