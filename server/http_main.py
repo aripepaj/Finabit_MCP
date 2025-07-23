@@ -73,40 +73,48 @@ class CallToolBody(BaseModel):
     name: str
     arguments: Dict[str, Any]
 
+# @app.post("/list_tools")
+# async def call_tool(body: CallToolBody):
+#     name = body.name
+#     arguments = body.arguments
+
+#     if name == "ask":
+#         question = arguments.get("question", "").strip()
+#         found_q, answer = await ask_faq_api(question)
+#         if answer:
+#             reply = f"**Q:** {found_q}\n**A:** {answer}"
+#         else:
+#             reply = "Sorry, I could not find an answer for your question."
+#         return {"content": reply}
+
+#     elif name == "get_sales":
+#         from_date = arguments.get("from_date")
+#         to_date = arguments.get("to_date")
+#         sales = get_sales(from_date, to_date)
+#         return {"content": sales}
+
+#     elif name == "get_purchases":
+#         from_date = arguments.get("from_date")
+#         to_date = arguments.get("to_date")
+#         purchases = get_purchases(from_date, to_date)
+#         return {"content": purchases}
+
+#     elif name == "get_items":
+#         page_number = arguments.get("page_number", 1)
+#         page_size = arguments.get("page_size", 20)
+#         items = get_items(page_number, page_size)
+#         return {"content": items}
+
+#     else:
+#         return {"error": f"Unknown tool: {name}"}
+    
 @app.post("/call_tool")
 async def call_tool(body: CallToolBody):
-    name = body.name
-    arguments = body.arguments
+    return {"content": f"Ran tool {body.name} with arguments {body.arguments}"}
 
-    if name == "ask":
-        question = arguments.get("question", "").strip()
-        found_q, answer = await ask_faq_api(question)
-        if answer:
-            reply = f"**Q:** {found_q}\n**A:** {answer}"
-        else:
-            reply = "Sorry, I could not find an answer for your question."
-        return {"content": reply}
-
-    elif name == "get_sales":
-        from_date = arguments.get("from_date")
-        to_date = arguments.get("to_date")
-        sales = get_sales(from_date, to_date)
-        return {"content": sales}
-
-    elif name == "get_purchases":
-        from_date = arguments.get("from_date")
-        to_date = arguments.get("to_date")
-        purchases = get_purchases(from_date, to_date)
-        return {"content": purchases}
-
-    elif name == "get_items":
-        page_number = arguments.get("page_number", 1)
-        page_size = arguments.get("page_size", 20)
-        items = get_items(page_number, page_size)
-        return {"content": items}
-
-    else:
-        return {"error": f"Unknown tool: {name}"}
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Finabit MCP server is running."}
 
 # Optionally, you can add a health check
 @app.get("/healthz")
