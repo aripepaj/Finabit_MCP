@@ -19,10 +19,19 @@
       }
     }
   },
-  "tools": [
-    { "name": "ask", "description": "Find and return the best-matching FAQ answer for a user's question about Finabit." },
-    { "name": "get_sales", "description": "Returns sales for a specific date from the business database." },
-    { "name": "get_purchases", "description": "Returns purchases for a specific date from the business database." },
-    { "name": "list_faqs", "description": "Lists example FAQ questions that users can ask about Finabit's products, services, or support." }
-  ]
+"tools": [
+    {
+      "name": "ask",
+      "description": "Find and return the best-matching FAQ answer for a user's question about Finabit."
+    },
+    {
+      "name": "get_sales",
+      "description": "Returns sales for a date range by calling the API with FromDate and ToDate."
+    },
+    {
+      "name": "get_purchases",
+      "description": "Returns purchases for a date range by calling the API with FromDate and ToDate."
+    }
+],
+  "license": "MIT"
 }

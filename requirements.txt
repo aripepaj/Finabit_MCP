@@ -1,4 +1,4 @@
 mcp
-qdrant-client
-sentence-transformers
+requests
+httpx
 pyodbc
