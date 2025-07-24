@@ -67,6 +67,10 @@ async def call_tool(request: Request):
 def root():
     return {"message": "MCP up!"}
 
+@app.head("/")
+def head_root():
+    return
+
 @app.get("/.well-known/oauth-protected-resource")
 async def protected_resource():
     return {"status": "protected resource ok"}
