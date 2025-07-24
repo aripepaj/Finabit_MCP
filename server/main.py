@@ -33,6 +33,43 @@ async def ask_endpoint(question: str):
 def health_check():
     return {"status": "ok"}
 
+
+@app.post("/mcp/list_tools")
+async def list_tools():
+    return JSONResponse({
+        "tools": [
+            {
+                "name": "get_sales",
+                "description": "Get sales data between two dates.",
+                "parameters": [
+                    {"name": "from_date", "type": "string", "description": "Start date YYYY-MM-DD"},
+                    {"name": "to_date", "type": "string", "description": "End date YYYY-MM-DD"},
+                ]
+            },
+            {
+                "name": "get_purchases",
+                "description": "Get purchase data between two dates.",
+                "parameters": [
+                    {"name": "from_date", "type": "string"},
+                    {"name": "to_date", "type": "string"},
+                ]
+            },
+        ]
+    })
+
+@app.post("/mcp/call_tool")
+async def call_tool(request: Request):
+    data = await request.json()
+    tool = data.get("tool")
+    parameters = data.get("parameters", {})
+    if tool == "get_sales":
+        return {"result": get_sales(parameters["from_date"], parameters["to_date"])}
+    elif tool == "get_purchases":
+        return {"result": get_purchases(parameters["from_date"], parameters["to_date"])}
+    else:
+        return JSONResponse({"error": "Unknown tool"}, status_code=400)
+    
+
 @app.get("/.well-known/oauth-authorization-server")
 async def oauth_metadata():
     return JSONResponse({
