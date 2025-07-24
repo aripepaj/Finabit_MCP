@@ -7,10 +7,18 @@ from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from fastapi import Form
+from fastapi.middleware.cors import CORSMiddleware
 
 router = APIRouter()
 
 app = FastAPI(title="Finabit MCP HTTP Server", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/get_sales")
 def sales_endpoint(from_date: str, to_date: str):
@@ -36,7 +44,7 @@ def health_check():
 
 @app.post("/mcp/list_tools")
 async def list_tools():
-    return JSONResponse({
+    return {
         "tools": [
             {
                 "name": "get_sales",
@@ -55,7 +63,7 @@ async def list_tools():
                 ]
             },
         ]
-    })
+    }
 
 @app.post("/mcp/call_tool")
 async def call_tool(request: Request):
@@ -67,7 +75,7 @@ async def call_tool(request: Request):
     elif tool == "get_purchases":
         return {"result": get_purchases(parameters["from_date"], parameters["to_date"])}
     else:
-        return JSONResponse({"error": "Unknown tool"}, status_code=400)
+        return {"error": "Unknown tool"}
     
 
 @app.get("/.well-known/oauth-authorization-server")
