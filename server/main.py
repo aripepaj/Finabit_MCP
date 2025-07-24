@@ -47,50 +47,35 @@ async def list_tools():
     return {
         "tools": [
             {
-                "name": "get_sales",
-                "description": "Get sales data between two dates.",
+                "name": "echo",
+                "description": "Echo message.",
                 "parameters": [
-                    {"name": "from_date", "type": "string", "description": "Start date YYYY-MM-DD"},
-                    {"name": "to_date", "type": "string", "description": "End date YYYY-MM-DD"},
+                    {"name": "message", "type": "string", "description": "The message to echo"}
                 ]
-            },
-            {
-                "name": "get_purchases",
-                "description": "Get purchase data between two dates.",
-                "parameters": [
-                    {"name": "from_date", "type": "string"},
-                    {"name": "to_date", "type": "string"},
-                ]
-            },
+            }
         ]
     }
 
 @app.post("/mcp/call_tool")
 async def call_tool(request: Request):
     data = await request.json()
-    tool = data.get("tool")
-    parameters = data.get("parameters", {})
-    if tool == "get_sales":
-        return {"result": get_sales(parameters["from_date"], parameters["to_date"])}
-    elif tool == "get_purchases":
-        return {"result": get_purchases(parameters["from_date"], parameters["to_date"])}
-    else:
-        return {"error": "Unknown tool"}
+    if data.get("tool") == "echo":
+        return {"result": data["parameters"]["message"]}
+    return {"error": "Unknown tool"}
     
 
 @app.get("/.well-known/oauth-authorization-server")
 async def oauth_metadata():
-    return JSONResponse({
+    return {
         "issuer": "https://finabit-mcp.onrender.com",
         "authorization_endpoint": "https://finabit-mcp.onrender.com/oauth/authorize",
         "token_endpoint": "https://finabit-mcp.onrender.com/oauth/token",
         "registration_endpoint": "https://finabit-mcp.onrender.com/oauth/register",
         "scopes_supported": ["claudeai"],
-        "scope": "claudeai",
         "response_types_supported": ["code"],
         "grant_types_supported": ["authorization_code", "client_credentials"],
-        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
-    })
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"]
+    }
 
 @router.post("/oauth/register")
 async def oauth_register(request: Request):
