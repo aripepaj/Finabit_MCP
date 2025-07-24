@@ -62,6 +62,14 @@ async def call_tool(request: Request):
     if data.get("tool") == "echo":
         return {"result": data["parameters"]["message"]}
     return {"error": "Unknown tool"}
+
+@app.get("/")
+def root():
+    return {"message": "MCP up!"}
+
+@app.get("/.well-known/oauth-protected-resource")
+async def protected_resource():
+    return {"status": "protected resource ok"}
     
 
 @app.get("/.well-known/oauth-authorization-server")
