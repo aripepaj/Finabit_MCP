@@ -1,6 +1,9 @@
 mcp
 requests
-httpx
 pyodbc
 fastapi
 uvicorn
+fastapi
+uvicorn
+fastapi-mcp
+httpx
