@@ -1,7 +1,5 @@
-mcp
 requests
 pyodbc
-fastapi
 uvicorn
 fastapi
 uvicorn
