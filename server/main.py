@@ -9,6 +9,11 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
 
 router = APIRouter()
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
+
+router = APIRouter()
 
 app = FastAPI(title="Finabit MCP HTTP Server", version="0.1.0")
 
