@@ -5,8 +5,8 @@ from server.tools.items import get_items
 from server.tools.faq import ask_faq_api
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
+from fastapi import Form
 
 router = APIRouter()
 
@@ -62,7 +62,13 @@ async def oauth_authorize(response_type: str, client_id: str, redirect_uri: str,
     return RedirectResponse(f"{redirect_uri}?code={code}&state={state}")
 
 @router.post("/oauth/token")
-async def oauth_token(grant_type: str, code: str = "", redirect_uri: str = "", client_id: str = "", client_secret: str = ""):
+async def oauth_token(
+    grant_type: str = Form(...),
+    code: str = Form(""),
+    redirect_uri: str = Form(""),
+    client_id: str = Form(""),
+    client_secret: str = Form("")
+):
     return {
         "access_token": "local-token",
         "token_type": "bearer",
