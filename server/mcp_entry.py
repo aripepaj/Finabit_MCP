@@ -1,13 +1,9 @@
 from fastapi import FastAPI
-from fastapi_mcp import FastApiMCP, tool
-from fastapi_mcp.types import AuthConfig
-from server.tools.sales import get_sales
+from fastapi_mcp import FastApiMCP
+from fastapi_mcp.types import AuthConfig, MCPTool
 
-app = FastAPI(title="Finabit MCP HTTP Server", version="0.1.0")
+app = FastAPI()
 
-# OAuth setup, CORS, and other routes (healthz, ask, etc.) remain as-is.
-
-# Initialize FastApiMCP
 mcp = FastApiMCP(
     app,
     auth_config=AuthConfig(
@@ -21,13 +17,18 @@ mcp = FastApiMCP(
     )
 )
 
-@tool(name="echo", description="Echo a message back.")
-def echo_tool(message: str):
-    return message
+# Register tools explicitly
+mcp.add_tool(
+    MCPTool(
+        name="echo",
+        description="Echo a message back.",
+        input_schema={
+            "type": "object",
+            "properties": {"message": {"type": "string"}},
+            "required": ["message"],
+        },
+        func=lambda args: args["message"],
+    )
+)
 
-@tool(name="get_sales", description="Return sales between two ISO dates (YYYY-MM-DD).")
-def get_sales_tool(from_date: str, to_date: str):
-    return get_sales(from_date, to_date)
-
-# Mount MCP routes
 mcp.mount()
