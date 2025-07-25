@@ -43,59 +43,36 @@ def health_check():
 
 
 @app.post("/mcp/tools/list")
-async def list_tools():
+async def mcp_list_tools():
     return {
         "tools": [
             {
-                "name": "echo",
-                "description": "Echo a message back.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "message": {"type": "string", "description": "The message to echo"}
-                    },
-                    "required": ["message"],
-                    "additionalProperties": False
-                }
-            },
-            {
                 "name": "get_sales",
-                "description": "Return sales between two ISO dates (YYYY-MM-DD).",
+                "description": "Get sales between two ISO dates (YYYY-MM-DD).",
                 "input_schema": {
                     "type": "object",
                     "properties": {
                         "from_date": {"type": "string", "format": "date"},
                         "to_date": {"type": "string", "format": "date"}
                     },
-                    "required": ["from_date", "to_date"],
-                    "additionalProperties": False
+                    "required": ["from_date", "to_date"]
                 }
             }
-            # add your other tools here
         ]
     }
 
 @app.post("/mcp/tools/call")
-async def call_tool(request: Request):
+async def mcp_call_tool(request: Request):
     data = await request.json()
     name = data.get("name")
     args = data.get("arguments", {})
 
-    if name == "echo":
-        return {
-            "content": [
-                {"type": "text", "text": args["message"]}
-            ]
-        }
-
     if name == "get_sales":
-        from_date = args.get("from_date")
-        to_date = args.get("to_date")
-        if not from_date or not to_date:
-            raise HTTPException(status_code=400, detail="from_date and to_date are required")
+        if not args.get("from_date") or not args.get("to_date"):
+            raise HTTPException(status_code=400, detail="from_date and to_date required")
         return {
             "content": [
-                {"type": "json", "json": get_sales(from_date, to_date)}
+                {"type": "json", "json": get_sales(args["from_date"], args["to_date"])}
             ]
         }
 
@@ -108,7 +85,7 @@ def root():
 @app.head("/")
 def head_root():
     return {"status": "ok"}
-
+    
 @app.get("/.well-known/oauth-protected-resource")
 async def protected_resource():
     return {"status": "protected resource ok"}
