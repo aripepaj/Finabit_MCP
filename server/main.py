@@ -107,7 +107,7 @@ def root():
 
 @app.head("/")
 def head_root():
-    return
+    return {"status": "ok"}
 
 @app.get("/.well-known/oauth-protected-resource")
 async def protected_resource():
