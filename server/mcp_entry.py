@@ -8,8 +8,8 @@ mcp = FastApiMCP(
         version="2025-03-26",
         client_id="local-test",
         client_secret="dev-secret",
-        issuer="http://localhost:8010",
-        default_scope="test",
+        issuer="https://finabit-mcp.onrender.com",
+        default_scope="claudeai",
         setup_proxies=False,
         setup_fake_dynamic_registration=True,
     )

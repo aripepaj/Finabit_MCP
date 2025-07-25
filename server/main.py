@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from server.tools.sales import get_sales
 from server.tools.purchases import get_purchases
 from server.tools.items import get_items
@@ -42,26 +42,64 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.post("/mcp/list_tools")
+@app.post("/mcp/tools/list")
 async def list_tools():
     return {
         "tools": [
             {
                 "name": "echo",
-                "description": "Echo message.",
-                "parameters": [
-                    {"name": "message", "type": "string", "description": "The message to echo"}
-                ]
+                "description": "Echo a message back.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "description": "The message to echo"}
+                    },
+                    "required": ["message"],
+                    "additionalProperties": False
+                }
+            },
+            {
+                "name": "get_sales",
+                "description": "Return sales between two ISO dates (YYYY-MM-DD).",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "from_date": {"type": "string", "format": "date"},
+                        "to_date": {"type": "string", "format": "date"}
+                    },
+                    "required": ["from_date", "to_date"],
+                    "additionalProperties": False
+                }
             }
+            # add your other tools here
         ]
     }
 
-@app.post("/mcp/call_tool")
+@app.post("/mcp/tools/call")
 async def call_tool(request: Request):
     data = await request.json()
-    if data.get("tool") == "echo":
-        return {"result": data["parameters"]["message"]}
-    return {"error": "Unknown tool"}
+    name = data.get("name")
+    args = data.get("arguments", {})
+
+    if name == "echo":
+        return {
+            "content": [
+                {"type": "text", "text": args["message"]}
+            ]
+        }
+
+    if name == "get_sales":
+        from_date = args.get("from_date")
+        to_date = args.get("to_date")
+        if not from_date or not to_date:
+            raise HTTPException(status_code=400, detail="from_date and to_date are required")
+        return {
+            "content": [
+                {"type": "json", "json": get_sales(from_date, to_date)}
+            ]
+        }
+
+    raise HTTPException(status_code=404, detail=f"Unknown tool: {name}")
 
 @app.get("/")
 def root():
