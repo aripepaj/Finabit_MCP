@@ -1,13 +1,13 @@
 # mcp_http_server.py
 import json
 import logging
-from typing import Dict
+import asyncio
+from collections import deque
+from typing import Dict, List, Deque, Any
 
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.responses import StreamingResponse
-import asyncio
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from mcp.server import Server
 from mcp.types import Tool, TextContent
@@ -17,12 +17,11 @@ from server.tools.purchases import get_purchases
 from server.tools.items import get_items
 from server.tools.faq import ask_faq_api
 
-# -------------------- config --------------------
-
-PUBLIC_BASE_URL = "https://fe8dbe856f88.ngrok-free.app"  
+# -------------------- Config --------------------
+PUBLIC_BASE_URL = "https://fe8dbe856f88.ngrok-free.app"
 PROTOCOL_VERSION = "2025-06-18"
 
-INIT_RESULT_BASE: Dict = {
+INIT_RESULT_BASE: Dict[str, Any] = {
     "protocolVersion": PROTOCOL_VERSION,
     "capabilities": {
         "tools": {"list": True, "call": True},
@@ -34,23 +33,20 @@ INIT_RESULT_BASE: Dict = {
 logging.basicConfig(level=logging.INFO)
 
 # -------------------- FastAPI --------------------
-
 app = FastAPI(title="Finabit", version="0.1.0")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://claude.ai", "https://*.anthropic.com", "*"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
 )
 
-# -------------------- MCP server --------------------
-
+# -------------------- MCP Server --------------------
 mcp_server = Server("finabit-mcp")
 
 @mcp_server.list_tools()
-async def handle_list_tools() -> list[Tool]:
+async def handle_list_tools() -> List[Tool]:
     return [
         Tool(
             name="get_sales",
@@ -99,7 +95,7 @@ async def handle_list_tools() -> list[Tool]:
     ]
 
 @mcp_server.call_tool()
-async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
+async def handle_call_tool(name: str, arguments: dict) -> List[TextContent]:
     try:
         if name == "get_sales":
             result = get_sales(arguments["from_date"], arguments["to_date"])
@@ -114,14 +110,12 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
             result = {"question": found_q, "answer": answer}
         else:
             raise ValueError(f"Unknown tool: {name}")
-
         return [TextContent(type="text", text=json.dumps(result, indent=2))]
     except Exception as e:
         logging.exception(f"Error in tool {name}")
         return [TextContent(type="text", text=f"Error: {str(e)}")]
 
-# -------------------- transport --------------------
-
+# -------------------- Transport --------------------
 class HTTPTransport:
     def __init__(self, server: Server):
         self.server = server
@@ -131,8 +125,7 @@ class HTTPTransport:
         try:
             if method == "initialize":
                 tools = await handle_list_tools()
-                init = dict(INIT_RESULT_BASE)
-                init["tools"] = [
+                tool_list = [
                     {
                         "name": t.name,
                         "description": t.description,
@@ -140,9 +133,12 @@ class HTTPTransport:
                     }
                     for t in tools
                 ]
+                init = dict(INIT_RESULT_BASE)
+                init["tools"] = tool_list
+                init["capabilities"]["tools"]["available"] = tool_list
                 logging.info(f"[MCP] <-- initialize result: {json.dumps(init)[:500]}...")
                 return init
-            
+
             if method == "notifications/initialized":
                 logging.info("[MCP] <-- notifications/initialized acknowledged")
                 return {}
@@ -163,7 +159,6 @@ class HTTPTransport:
             if method == "tools/call":
                 name = params.get("name")
                 arguments = params.get("arguments", {})
-                logging.info(f"[MCP] calling tool={name} args={arguments}")
                 content = await handle_call_tool(name, arguments)
                 response = {
                     "content": [{"type": c.type, "text": c.text} for c in content]
@@ -176,11 +171,37 @@ class HTTPTransport:
             logging.exception(f"[MCP] error in {method}")
             raise HTTPException(status_code=500, detail=str(e))
 
-# 👉 You were missing this line:
 transport = HTTPTransport(mcp_server)
 
-# -------------------- /mcp endpoints --------------------
+# -------------------- SSE --------------------
+sse_clients: List[Deque[dict]] = []
 
+async def sse_event_stream(request: Request, client_queue: Deque[dict]):
+    try:
+        while True:
+            if await request.is_disconnected():
+                break
+            if client_queue:
+                msg = client_queue.popleft()
+                yield f"data: {json.dumps(msg)}\n\n"
+            await asyncio.sleep(0.1)
+    finally:
+        if client_queue in sse_clients:
+            sse_clients.remove(client_queue)
+        logging.info("[MCP] SSE client disconnected")
+
+def sse_broadcast(msg: dict):
+    for q in sse_clients:
+        q.append(msg)
+
+@app.get("/mcp/sse")
+async def mcp_sse(request: Request):
+    client_queue = deque()
+    sse_clients.append(client_queue)
+    logging.info("[MCP] New SSE client connected")
+    return StreamingResponse(sse_event_stream(request, client_queue), media_type="text/event-stream")
+
+# -------------------- MCP HTTP --------------------
 @app.post("/mcp")
 async def mcp_endpoint(request: Request):
     data = await request.json()
@@ -189,13 +210,13 @@ async def mcp_endpoint(request: Request):
     msg_id = data.get("id")
     try:
         result = await transport.handle_request(method, params)
-        return {"jsonrpc": "2.0", "id": msg_id, "result": result}
+        response = {"jsonrpc": "2.0", "id": msg_id, "result": result}
+        sse_broadcast(response)
+        return response
     except Exception as e:
-        return {
-            "jsonrpc": "2.0",
-            "id": msg_id,
-            "error": {"code": -32000, "message": str(e)},
-        }
+        err = {"jsonrpc": "2.0", "id": msg_id, "error": {"code": -32000, "message": str(e)}}
+        sse_broadcast(err)
+        return err
 
 @app.get("/mcp")
 async def mcp_get_check():
@@ -209,8 +230,7 @@ async def mcp_head_check():
 async def health():
     return {"status": "healthy"}
 
-# -------------------- OAuth endpoints --------------------
-
+# -------------------- OAuth --------------------
 @app.get("/.well-known/oauth-authorization-server")
 async def oauth_metadata():
     return {
@@ -221,59 +241,18 @@ async def oauth_metadata():
         "scopes_supported": ["claudeai"],
         "response_types_supported": ["code"],
         "grant_types_supported": ["authorization_code", "client_credentials"],
-        "token_endpoint_auth_methods_supported": [
-            "client_secret_post",
-            "client_secret_basic",
-        ],
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
     }
-
-@app.get("/.well-known/oauth-protected-resource")
-async def protected_resource():
-    return {"status": "protected resource ok"}
 
 @app.post("/oauth/register")
 async def oauth_register(request: Request):
     data = await request.json()
-    return JSONResponse(
-        {
-            "client_id": "local-test",
-            "client_secret": "dev-secret",
-            "redirect_uris": data.get("redirect_uris", []),
-            "scope": "claudeai",
-        }
-    )
+    return JSONResponse({"client_id": "local-test", "client_secret": "dev-secret", "redirect_uris": data.get("redirect_uris", []), "scope": "claudeai"})
 
 @app.get("/oauth/authorize")
-async def oauth_authorize(
-    response_type: str,
-    client_id: str,
-    redirect_uri: str,
-    scope: str,
-    state: str = "",
-):
-    code = "testcode"
-    return RedirectResponse(f"{redirect_uri}?code={code}&state={state}")
+async def oauth_authorize(response_type: str, client_id: str, redirect_uri: str, scope: str, state: str = ""):
+    return RedirectResponse(f"{redirect_uri}?code=testcode&state={state}")
 
 @app.post("/oauth/token")
-async def oauth_token(
-    grant_type: str = Form(...),
-    code: str = Form(""),
-    redirect_uri: str = Form(""),
-    client_id: str = Form(""),
-    client_secret: str = Form(""),
-):
-    return {
-        "access_token": "local-token",
-        "token_type": "bearer",
-        "expires_in": 3600,
-        "scope": "claudeai",
-    }
-
-# optional aliases Claude sometimes probes
-@app.get("/.well-known/oauth-authorization-server/mcp")
-async def oauth_metadata_mcp():
-    return await oauth_metadata()
-
-@app.get("/.well-known/oauth-protected-resource/mcp")
-async def protected_resource_mcp():
-    return await protected_resource()
+async def oauth_token(grant_type: str = Form(...), code: str = Form(""), redirect_uri: str = Form(""), client_id: str = Form(""), client_secret: str = Form("")):
+    return {"access_token": "local-token", "token_type": "bearer", "expires_in": 3600, "scope": "claudeai"}
