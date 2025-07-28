@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.responses import StreamingResponse
 import asyncio
+from fastapi.responses import JSONResponse
 
 from mcp.server import Server
 from mcp.types import Tool, TextContent
@@ -277,3 +278,7 @@ async def oauth_metadata_mcp():
 @app.get("/.well-known/oauth-protected-resource/mcp")
 async def protected_resource_mcp():
     return await protected_resource()
+
+@mcp_server.custom_route("/mcp", methods=["GET"])
+async def mcp_handshake(_request):
+    return JSONResponse({"status": "ok"})

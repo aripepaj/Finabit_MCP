@@ -1,41 +1,6 @@
 {
-  "dxt_version": "1",
   "name": "Finabit",
-  "author": {
-    "name": "Finabit",
-    "email": "developers@terabit-ks.com"
-  },
-  "version": "0.1.0",
-  "description": "Finabit është një platform modern për menaxhimin financiar të biznesit tuaj. Me Finabit, ju mund të menaxhoni të gjitha financat e kompanisë—shitjet, blerjet, faturat, pyetjet më të shpeshta dhe shumë më tepër. Menaxhoni biznesin tuaj më lehtë, më shpejt dhe më saktë, kudo që jeni.",
-  "icon": "icon.png",
-  "server": {
-    "type": "python",
-    "entry_point": "server/main.py",
-    "mcp_config": {
-      "command": "python",
-      "args": ["${__dirname}/server/main.py"],
-      "env": {
-        "PYTHONPATH": "${__dirname}/server/lib"
-      }
-    }
-  },
-"tools": [
-    {
-      "name": "ask",
-      "description": "Find and return the best-matching FAQ answer for a user's question about Finabit."
-    },
-    {
-      "name": "get_sales",
-      "description": "Returns sales for a date range by calling the API with FromDate and ToDate."
-    },
-    {
-      "name": "get_purchases",
-      "description": "Returns purchases for a date range by calling the API with FromDate and ToDate."
-    },
-    {
-      "name": "get_items",
-      "description": "Returns all items from the inventory/catalog."
-    }
-],
+  "description": "Finabit MCP Service for Sales, Purchases and Items",
+  "icon": "/favicon.ico",
   "license": "MIT"
 }

@@ -27,11 +27,11 @@ def get_purchases_for_date(from_date, to_date):
     """
     Fetch purchase data from the API for the given date range.
     """
-    params = {"FromDate": from_date, "ToDate": to_date}
+    params = {"FromDate": from_date, "ToDate": to_date, "TransactionTypeID": 1}
     try:
         # For purchases, you might need a different endpoint
         # Adjust this URL based on your actual API for purchases
-        resp = requests.get(f"{API_BASE_URL}Transactions/PurchasesList", params=params, timeout=10)
+        resp = requests.get(f"{API_BASE_URL}Transactions/TransactionsList", params=params, timeout=10)
         resp.raise_for_status()
         transactions = resp.json()
         

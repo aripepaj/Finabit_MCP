@@ -27,10 +27,10 @@ def get_sales_for_date(from_date, to_date):
     """
     Fetch sales data from the API for the given date range.
     """
-    params = {"FromDate": from_date, "ToDate": to_date}
+    params = {"FromDate": from_date, "ToDate": to_date, "TransactionTypeID": 2} 
     try:
         # Use the correct API endpoint from your documentation
-        resp = requests.get(f"{API_BASE_URL}Transactions/OrdersList", params=params, timeout=10)
+        resp = requests.get(f"{API_BASE_URL}Transactions/TransactionsList", params=params, timeout=10)
         resp.raise_for_status()
         transactions = resp.json()
         
