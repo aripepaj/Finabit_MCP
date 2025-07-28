@@ -1,1 +1,0 @@
-API_BASE_URL = "http://192.168.199.30/FINABITAPI2/api/"

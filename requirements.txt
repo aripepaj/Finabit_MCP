@@ -1,7 +1,5 @@
 requests
 pyodbc
 uvicorn
-fastapi
-uvicorn
 fastapi-mcp
-httpx
+pydantic-settings
