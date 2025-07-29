@@ -1,20 +1,27 @@
 def format_sales_data(sales, from_date, to_date):
     if not sales:
         return f"No sales found between {from_date} and {to_date}."
-    
+
     reply = f"Found {len(sales)} sale(s) for the period {from_date} to {to_date}:\n\n"
     for i, sale in enumerate(sales, 1):
         reply += (
             f"**Sale {i}:**\n"
-            f"- Invoice No: {sale.Numri}\n"
-            f"- Date: {sale.Data}\n"
-            f"- Customer: {sale.Konsumatori}\n"
-            f"- Product: {sale.Emertimi}\n"
-            f"- Quantity: {sale.Sasia} {sale.Njesia_Artik}\n"
-            f"- Unit Price: {sale.Cmimi}\n"
-            f"- Total Value: {sale.Value}\n"
-            f"- Status: {sale.Statusi_Faturimit}\n\n"
+            f"- ID: {sale.get('ID', '')}\n"
+            f"- Invoice No: {sale.get('Numri', '')}\n"
+            f"- Date: {sale.get('Data', '')}\n"
+            f"- Customer ID: {sale.get('ID_Konsumatorit', '')}\n"
+            f"- Customer: {sale.get('Konsumatori', '')}\n"
+            f"- Salesman: {sale.get('Komercialisti', '')}\n"
+            f"- Status: {sale.get('Statusi_Faturimit', '')}\n"
+            f"- Code: {sale.get('Shifra', '')}\n"
+            f"- Product: {sale.get('Emertimi', '')}\n"
+            f"- Unit: {sale.get('Njesia_Artik', '')}\n"
+            f"- Quantity: {sale.get('Sasia', '')}\n"
+            f"- Unit Price: {sale.get('Cmimi', '')}\n"
         )
+        if 'Value' in sale:
+            reply += f"- Total Value: {sale.get('Value', '')}\n"
+        reply += "\n"
     return reply
 
 def format_purchases_data(purchases, from_date, to_date):
@@ -22,18 +29,25 @@ def format_purchases_data(purchases, from_date, to_date):
         return f"No purchases found between {from_date} and {to_date}."
 
     reply = f"Found {len(purchases)} purchase(s) for the period {from_date} to {to_date}:\n\n"
-    for i, p in enumerate(purchases, 1):
+    for i, sale in enumerate(sales, 1):
         reply += (
-            f"**Purchase {i}:**\n"
-            f"- Invoice No: {p.Numri}\n"
-            f"- Date: {p.Data}\n"
-            f"- Supplier: {p.Konsumatori}\n"
-            f"- Product: {p.Emertimi}\n"
-            f"- Quantity: {p.Sasia} {p.Njesia_Artik}\n"
-            f"- Unit Price: {p.Cmimi}\n"
-            f"- Total Value: {p.Value}\n"
-            f"- Status: {p.Statusi_Faturimit}\n\n"
+            f"**Sale {i}:**\n"
+            f"- ID: {sale.get('ID', '')}\n"
+            f"- Invoice No: {sale.get('Numri', '')}\n"
+            f"- Date: {sale.get('Data', '')}\n"
+            f"- Customer ID: {sale.get('ID_Konsumatorit', '')}\n"
+            f"- Customer: {sale.get('Konsumatori', '')}\n"
+            f"- Salesman: {sale.get('Komercialisti', '')}\n"
+            f"- Status: {sale.get('Statusi_Faturimit', '')}\n"
+            f"- Code: {sale.get('Shifra', '')}\n"
+            f"- Product: {sale.get('Emertimi', '')}\n"
+            f"- Unit: {sale.get('Njesia_Artik', '')}\n"
+            f"- Quantity: {sale.get('Sasia', '')}\n"
+            f"- Unit Price: {sale.get('Cmimi', '')}\n"
         )
+        if 'Value' in sale:
+            reply += f"- Total Value: {sale.get('Value', '')}\n"
+        reply += "\n"
     return reply
 
 def format_items_data(result):
@@ -51,25 +65,49 @@ def format_items_data(result):
     for i, item in enumerate(items, 1):
         reply += (
             f"**Item {i}:**\n"
-            f"- ID: {item.ItemID}\n"
-            f"- Name: {item.ItemName}\n"
-            f"- Quantity: {item.Quantity} {item.UnitName or item.UnitDescription or ''}\n"
-            f"- Sales Price: {item.SalesPrice}\n"
-            f"- Cost Price: {item.CostPrice}\n"
-            f"- Location: {item.LocationName}\n"
-            f"- Group: {item.ItemGroup}\n"
-            f"- Producer: {item.Prodhuesi}\n"
+            f"- ID: {item.get('ID', '')}\n"
+            f"- ItemID: {item.get('ItemID', '')}\n"
+            f"- Name: {item.get('ItemName', '')}\n"
+            f"- Unit Name: {item.get('UnitName', '')}\n"
+            f"- Unit ID: {item.get('UnitID', '')}\n"
+            f"- Item Group ID: {item.get('ItemGroupID', '')}\n"
+            f"- Item Group: {item.get('ItemGroup', '')}\n"
+            f"- Taxable: {item.get('Taxable', '')}\n"
+            f"- Active: {item.get('Active', '')}\n"
+            f"- Dogana: {item.get('Dogana', '')}\n"
+            f"- Akciza: {item.get('Akciza', '')}\n"
+            f"- Color: {item.get('Color', '')}\n"
+            f"- PDA Item Name: {item.get('PDAItemName', '')}\n"
+            f"- VAT Value: {item.get('VATValue', '')}\n"
+            f"- Akciza Value: {item.get('AkcizaValue', '')}\n"
+            f"- Maximum Quantity: {item.get('MaximumQuantity', '')}\n"
+            f"- Coefficient: {item.get('Coefficient', '')}\n"
+            f"- Barcode1: {item.get('barcode1', '')}\n"
+            f"- Barcode2: {item.get('barcode2', '')}\n"
+            f"- Sales Price2: {item.get('SalesPrice2', '')}\n"
+            f"- Sales Price3: {item.get('SalesPrice3', '')}\n"
+            f"- Origin: {item.get('Origin', '')}\n"
+            f"- Category: {item.get('Category', '')}\n"
+            f"- PLU: {item.get('PLU', '')}\n"
+            f"- Item Template: {item.get('ItemTemplate', '')}\n"
+            f"- Weight: {item.get('Weight', '')}\n"
+            f"- Author: {item.get('Author', '')}\n"
+            f"- Publisher: {item.get('Publisher', '')}\n"
+            f"- Custom Field 1: {item.get('CustomField1', '')}\n"
+            f"- Custom Field 2: {item.get('CustomField2', '')}\n"
+            f"- Custom Field 3: {item.get('CustomField3', '')}\n"
+            f"- Custom Field 4: {item.get('CustomField4', '')}\n"
+            f"- Custom Field 5: {item.get('CustomField5', '')}\n"
+            f"- Custom Field 6: {item.get('CustomField6', '')}\n"
+            f"- Barcode3: {item.get('Barcode3', '')}\n"
+            f"- Netto Brutto Weight: {item.get('NettoBruttoWeight', '')}\n"
+            f"- Bruto Weight: {item.get('BrutoWeight', '')}\n"
+            f"- Max Discount: {item.get('MaxDiscount', '')}\n"
+            f"- Shifra Prodhuesit: {item.get('ShifraProdhuesit', '')}\n"
+            f"- Prodhuesi: {item.get('Prodhuesi', '')}\n"
         )
-        if item.Barcode:
-            reply += f"- Barcode: {item.Barcode}\n"
-        if item.Color:
-            reply += f"- Color: {item.Color}\n"
-        if item.Weight:
-            reply += f"- Weight: {item.Weight}\n"
-
-        reply += f"- Active: {'Yes' if item.Active else 'No'}\n"
-        reply += f"- Service: {'Yes' if item.IsService else 'No'}\n\n"
-
+        reply += "\n"
+    
     if total_pages > 1:
         reply += f"\n*Use `page_number` to view other pages (1–{total_pages})*"
 

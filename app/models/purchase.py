@@ -1,8 +1,3 @@
-import requests
-from app.core.config import settings
-
-API_BASE_URL = settings.API_BASE_URL
-
 class Purchase:
     def __init__(self, data):
         self.ID = data.get('ID')
@@ -18,17 +13,9 @@ class Purchase:
         self.Sasia = data.get('Sasia')
         self.Cmimi = data.get('Cmimi')
         self.InvoiceNo = self.Numri
-        self.Value = self.Cmimi * self.Sasia if self.Cmimi and self.Sasia else 0
+        self.Value = (self.Cmimi or 0) * (self.Sasia or 0)
         self.PartnerID = self.Konsumatori
         self.TransactionDate = self.Data
 
-def get_purchases_for_date(from_date, to_date):
-    params = {"FromDate": from_date, "ToDate": to_date, "TransactionTypeID": 1}
-    try:
-        resp = requests.get(f"{API_BASE_URL}Transactions/TransactionsList", params=params, timeout=10)
-        resp.raise_for_status()
-        transactions = resp.json()
-        return [Purchase(transaction) for transaction in transactions]
-    except Exception as e:
-        print(f"[get_purchases_for_date] Error: {e}")
-        return []
+    def dict(self):
+        return self.__dict__

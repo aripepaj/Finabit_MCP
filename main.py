@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastmcp import FastMCP
 from dotenv import load_dotenv
 
+# from auth.routes import router as auth_router
 from app.api import sales_tool, purchases_tool, items_tool
 
 from app.services.faq import ask_faq_api
@@ -21,9 +22,10 @@ async def tool_ask_faq(question: str):
     found_q, answer = await ask_faq_api(question)
     return {"question": found_q, "answer": answer}
 
-# ✅ Setup FastAPI app
 app = FastAPI(lifespan=mcp.http_app().lifespan)
 app.mount("/mcp", mcp.http_app())
+
+# app.include_router(auth_router)
 
 @app.get("/health")
 def health():
@@ -45,7 +47,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal Server Error"}
     )
 
-# ✅ Launch MCP server
 if __name__ == "__main__":
     mcp.run(transport="streamable-http",
             host="127.0.0.1",
