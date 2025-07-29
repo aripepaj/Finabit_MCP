@@ -29,24 +29,24 @@ def format_purchases_data(purchases, from_date, to_date):
         return f"No purchases found between {from_date} and {to_date}."
 
     reply = f"Found {len(purchases)} purchase(s) for the period {from_date} to {to_date}:\n\n"
-    for i, sale in enumerate(sales, 1):
+    for i, purchase in enumerate(purchases, 1):
         reply += (
-            f"**Sale {i}:**\n"
-            f"- ID: {sale.get('ID', '')}\n"
-            f"- Invoice No: {sale.get('Numri', '')}\n"
-            f"- Date: {sale.get('Data', '')}\n"
-            f"- Customer ID: {sale.get('ID_Konsumatorit', '')}\n"
-            f"- Customer: {sale.get('Konsumatori', '')}\n"
-            f"- Salesman: {sale.get('Komercialisti', '')}\n"
-            f"- Status: {sale.get('Statusi_Faturimit', '')}\n"
-            f"- Code: {sale.get('Shifra', '')}\n"
-            f"- Product: {sale.get('Emertimi', '')}\n"
-            f"- Unit: {sale.get('Njesia_Artik', '')}\n"
-            f"- Quantity: {sale.get('Sasia', '')}\n"
-            f"- Unit Price: {sale.get('Cmimi', '')}\n"
+            f"**Purchase {i}:**\n"
+            f"- ID: {purchase.get('ID', '')}\n"
+            f"- Invoice No: {purchase.get('Numri', '')}\n"
+            f"- Date: {purchase.get('Data', '')}\n"
+            f"- Customer ID: {purchase.get('ID_Konsumatorit', '')}\n"
+            f"- Customer: {purchase.get('Konsumatori', '')}\n"
+            f"- Salesman: {purchase.get('Komercialisti', '')}\n"
+            f"- Status: {purchase.get('Statusi_Faturimit', '')}\n"
+            f"- Code: {purchase.get('Shifra', '')}\n"
+            f"- Product: {purchase.get('Emertimi', '')}\n"
+            f"- Unit: {purchase.get('Njesia_Artik', '')}\n"
+            f"- Quantity: {purchase.get('Sasia', '')}\n"
+            f"- Unit Price: {purchase.get('Cmimi', '')}\n"
         )
-        if 'Value' in sale:
-            reply += f"- Total Value: {sale.get('Value', '')}\n"
+        if 'Value' in purchase:
+            reply += f"- Total Value: {purchase.get('Value', '')}\n"
         reply += "\n"
     return reply
 
