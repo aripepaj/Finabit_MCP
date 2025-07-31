@@ -4,3 +4,12 @@ uvicorn
 fastapi-mcp
 pydantic-settings
 fastmcp
+authlib 
+jinja2
+python-multipart
+sqlalchemy 
+aiosqlite
+bcrypt
+mcpauth
+python-jose
+pycryptodome

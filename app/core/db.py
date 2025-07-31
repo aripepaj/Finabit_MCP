@@ -1,13 +1,22 @@
-import pyodbc
+# app/core/db.py
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 
+conn_str = (
+    "mssql+pyodbc://"
+    f"{settings.db_user}:{settings.db_password}@"
+    f"{settings.db_server}/{settings.db_name}"
+    "?driver=ODBC+Driver+17+for+SQL+Server"
+)
+engine = create_engine(conn_str, echo=True, future=True)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+Base = declarative_base()
+
 def get_db_connection():
-    conn_str = (
-        "DRIVER={ODBC Driver 17 for SQL Server};"
-        f"SERVER={settings.db_server};"
-        f"DATABASE={settings.db_name};"
-        f"UID={settings.db_user};"
-        f"PWD={settings.db_password};"
-        "TrustServerCertificate=Yes;"
-    )
-    return pyodbc.connect(conn_str)
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
