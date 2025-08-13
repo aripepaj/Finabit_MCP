@@ -1,34 +1,70 @@
 name: Release MCP
+
 on:
   push:
-    tags: [ 'mcp-v*' ]   # tag like mcp-v1.0.0
+    tags:
+      - 'mcp-v*'        # triggers only when you push tags like mcp-v1.0.4
+
+# IMPORTANT: allow the workflow to create/update releases
+permissions:
+  contents: write
 
 jobs:
-  build-zip:
+  release:
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Stage files
-        run: |
-          mkdir pkg
-          xcopy /E /I app pkg\app
-          if exist static xcopy /E /I static pkg\static
-          copy main.py pkg\
-          copy requirements.txt pkg\
-          if exist .env.template copy .env.template pkg\
-          if exist manifest.json copy manifest.json pkg\
-          if exist README.txt copy README.txt pkg\
-      - name: Zip
-        run: powershell -Command "Compress-Archive -Path pkg\* -DestinationPath FinabitMCP_${{ github.ref_name }}_win.zip"
-      - name: sha256
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Get the tag name (e.g., mcp-v1.0.4)
+      - name: Determine tag
+        id: vars
         shell: bash
         run: |
-          certutil -hashfile FinabitMCP_${{ github.ref_name }}_win.zip SHA256 | sed -n '2p' | tr -d '\r' > FinabitMCP_${{ github.ref_name }}_win.zip.sha256
-      - name: Release
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Stage package files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory pkg | Out-Null
+          Copy-Item -Recurse app pkg\app
+          if (Test-Path static) { Copy-Item -Recurse static pkg\static }
+          Copy-Item main.py pkg\
+          Copy-Item requirements.txt pkg\
+          if (Test-Path .env.template) { Copy-Item .env.template pkg\ }
+          if (Test-Path manifest.json)  { Copy-Item manifest.json  pkg\ }
+          if (Test-Path README.txt)     { Copy-Item README.txt     pkg\ }
+
+      - name: Create ZIP
+        id: zip
+        shell: pwsh
+        run: |
+          $zip = "FinabitMCP_$('${{ steps.vars.outputs.TAG }}')_win.zip"
+          Compress-Archive -Path pkg\* -DestinationPath $zip
+          "ZIP_NAME=$zip" >> $env:GITHUB_OUTPUT
+
+      - name: SHA256
+        id: sha
+        shell: pwsh
+        run: |
+          $sha = (Get-FileHash -Algorithm SHA256 "${{ steps.zip.outputs.ZIP_NAME }}").Hash
+          Set-Content -Path "${{ steps.zip.outputs.ZIP_NAME }}.sha256" -Value $sha -Encoding ascii
+          "SHA=$sha" >> $env:GITHUB_OUTPUT
+
+      - name: Create/Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.vars.outputs.TAG }}
+          name: MCP ${{ steps.vars.outputs.TAG }}
+          body: |
+            Automated release for ${{ steps.vars.outputs.TAG }}.
+            SHA256: ${{ steps.sha.outputs.SHA }}
+          draft: false
+          prerelease: false
           files: |
-            FinabitMCP_${{ github.ref_name }}_win.zip
-            FinabitMCP_${{ github.ref_name }}_win.zip.sha256
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ${{ steps.zip.outputs.ZIP_NAME }}
+            ${{ steps.zip.outputs.ZIP_NAME }}.sha256
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true
