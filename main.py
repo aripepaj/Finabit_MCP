@@ -1,53 +1,53 @@
-import logging
-import os
-from fastapi import FastAPI, Request
+# main.py
+import os, logging, uuid, pathlib
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
-from fastmcp import FastMCP
-from dotenv import load_dotenv
 
-# from auth.routes import router as auth_router
-from app.api import sales_tool, purchases_tool, items_tool
+API_URL = os.getenv("API_URL", "http://localhost:5001")
+PORT    = int(os.getenv("PORT", "10000"))
 
-from app.services.faq import ask_faq_api
+from app.auth import oauth
+from app.main_ref import mcp
+from app.api import sales_tool, purchases_tool, items_tool, help_tool
+
+BASE_DIR = pathlib.Path(__file__).resolve().parent
+KEY_PATH = BASE_DIR / "install.key"
+if not KEY_PATH.exists():
+    KEY_PATH.write_text(uuid.uuid4().hex, encoding="ascii")
+
+mcp_app = mcp.http_app(path="/")
+app = FastAPI(lifespan=mcp_app.lifespan)
+
+# static + routers
+if (BASE_DIR / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.include_router(oauth.router)
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("finabit-mcp")
 
-load_dotenv() 
-FAQ_API_URL = os.getenv("FAQ_API_URL")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-from app.main_ref import mcp
-
-@mcp.tool(name="help", description="Ask Help system a question")
-async def tool_ask_faq(question: str):
-    found_q, answer = await ask_faq_api(question)
-    return {"question": found_q, "answer": answer}
-
-app = FastAPI(lifespan=mcp.http_app().lifespan)
-app.mount("/mcp", mcp.http_app())
-
-# app.include_router(auth_router)
+@app.get("/favicon.ico")
+async def favicon():
+    icon = BASE_DIR / "static" / "icon.ico"
+    return FileResponse(str(icon)) if icon.exists() else JSONResponse({}, 200)
 
 @app.get("/health")
 def health():
-    return {"status": "healthy"}
+    return {"status": "ok"}
 
-@app.get("/favicon.ico")
-def favicon():
-    return FileResponse("icon.ico")
-
-@app.get("/manifest.json")
-def get_manifest():
-    return FileResponse("manifest.json", media_type="application/json")
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logging.error(f"Unhandled error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error"}
-    )
+app.mount("/mcp", mcp_app)
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http",
-            host="127.0.0.1",
-            port=10000)
+    import uvicorn
+    logger.info(f"Starting MCP on :{PORT} (API_URL={API_URL})")
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

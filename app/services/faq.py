@@ -2,7 +2,7 @@ import httpx
 
 FASTAPI_URL = "http://192.168.199.38:8000/ask"
 
-async def ask_faq_api(question: str):
+async def ask_help(question: str):
     payload = {"question": question}
     async with httpx.AsyncClient() as client:
         response = await client.post(FASTAPI_URL, json=payload, timeout=10.0)
