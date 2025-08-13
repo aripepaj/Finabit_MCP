@@ -1,6 +1,13 @@
+import sys
 import os
 
-with open(os.path.join(os.path.dirname(__file__), '../../keys/private.pem'), "rb") as f:
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+with open(resource_path('keys/private.pem'), "rb") as f:
     PRIVATE_KEY = f.read()
-with open(os.path.join(os.path.dirname(__file__), '../../keys/public.pem'), "rb") as f:
+with open(resource_path('keys/public.pem'), "rb") as f:
     PUBLIC_KEY = f.read()
