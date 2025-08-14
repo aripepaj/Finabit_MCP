@@ -6,6 +6,13 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
+try:
+    from dotenv import load_dotenv  # add `python-dotenv` to requirements.txt
+    load_dotenv()                   # reads .env in the working directory
+except Exception:
+    pass
+
+
 def resource_path(*parts: str) -> Path:
     """
     Path to bundled, read-only resources.
@@ -34,6 +41,8 @@ def appdata_path(*parts: str) -> Path:
 
 API_URL = os.getenv("API_URL", "http://localhost:5001")
 PORT    = int(os.getenv("PORT", "10000"))
+SSL_CERTFILE = os.getenv("SSL_CERTFILE")  # optional
+SSL_KEYFILE  = os.getenv("SSL_KEYFILE")   # optional
 
 from app.auth import oauth
 from app.main_ref import mcp
@@ -79,4 +88,11 @@ app.mount("/mcp", mcp_app)
 if __name__ == "__main__":
     import uvicorn
     logger.info(f"Starting MCP on :{PORT} (API_URL={API_URL})")
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=PORT,
+        ssl_certfile=SSL_CERTFILE,
+        ssl_keyfile=SSL_KEYFILE,
+        proxy_headers=True,
+        forwarded_allow_ips="*")
