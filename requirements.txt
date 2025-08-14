@@ -1,10 +1,9 @@
-pyodbc
 uvicorn
 fastapi
-fastapi-mcp
-pydantic-settings
 fastmcp
-sqlalchemy
-python-jose
-pycryptodome
+pydantic-settings
 httpx
+keyring>=25.2
+pycryptodome
+python-jose
+requests

@@ -10,7 +10,7 @@ PORT    = int(os.getenv("PORT", "10000"))
 
 from app.auth import oauth
 from app.main_ref import mcp
-from app.api import sales_tool, purchases_tool, items_tool, help_tool
+from app.tools import sales_tool, purchases_tool, items_tool, help_tool
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent
 KEY_PATH = BASE_DIR / "install.key"

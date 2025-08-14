@@ -46,7 +46,6 @@ def login_form_html(auth_request_id, error_message=None):
             <input name="install_key" required maxlength="28" placeholder="Installation key">
             <button type="submit">Authorize</button>
             <div class="testing-hint">
-                <strong>💡 For testing:</strong> Use username "test" and password "test".<br>
                 You must also enter your Installation Key (ask your admin).
             </div>
         </form>

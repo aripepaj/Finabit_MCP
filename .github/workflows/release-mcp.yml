@@ -3,9 +3,8 @@ name: Release MCP
 on:
   push:
     tags:
-      - 'mcp-v*'        # triggers only when you push tags like mcp-v1.0.4
+      - 'mcp-v*'
 
-# IMPORTANT: allow the workflow to create/update releases
 permissions:
   contents: write
 
@@ -17,31 +16,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Get the tag name (e.g., mcp-v1.0.4)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
       - name: Determine tag
         id: vars
         shell: bash
-        run: |
-          echo "TAG=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
-      - name: Stage package files
+      - name: Build executable
         shell: pwsh
         run: |
-          New-Item -ItemType Directory pkg | Out-Null
-          Copy-Item -Recurse app pkg\app
-          if (Test-Path static) { Copy-Item -Recurse static pkg\static }
-          Copy-Item main.py pkg\
-          Copy-Item requirements.txt pkg\
-          if (Test-Path .env.template) { Copy-Item .env.template pkg\ }
-          if (Test-Path manifest.json)  { Copy-Item manifest.json  pkg\ }
-          if (Test-Path README.txt)     { Copy-Item README.txt     pkg\ }
-
+          # Adjust add-data lines to include any needed files/folders
+          pyinstaller --onefile main.py --name FinabitMCP `
+            --add-data "static;static" `
+            --add-data "manifest.json;." `
+            --add-data ".env.template;."
+      
       - name: Create ZIP
         id: zip
         shell: pwsh
         run: |
-          $zip = "FinabitMCP_$('${{ steps.vars.outputs.TAG }}')_win.zip"
-          Compress-Archive -Path pkg\* -DestinationPath $zip
+          $zip = "FinabitMCP_${{ steps.vars.outputs.TAG }}_win.zip"
+          Compress-Archive -Path dist\FinabitMCP.exe -DestinationPath $zip
           "ZIP_NAME=$zip" >> $env:GITHUB_OUTPUT
 
       - name: SHA256
@@ -65,6 +70,5 @@ jobs:
           files: |
             ${{ steps.zip.outputs.ZIP_NAME }}
             ${{ steps.zip.outputs.ZIP_NAME }}.sha256
-          fail_on_unmatched_files: true
           generate_release_notes: true
           make_latest: true

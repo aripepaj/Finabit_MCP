@@ -7,11 +7,10 @@ import base64
 from typing import Optional
 
 from fastapi import HTTPException, Header
-
-from app.core.db import get_db_connection
 from app.core.keys import PRIVATE_KEY, PUBLIC_KEY
 from jose import jwt
 from app.auth.state import oauth_sessions, registered_clients
+from app.services.users import UserService
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 INSTALL_KEY_PATH = os.path.join(HERE, "..", "..", "install.key")
@@ -68,15 +67,13 @@ async def verify_mcp_token(authorization: Optional[str] = Header(None)) -> dict:
             
             logger.info("Valid MCP request from test user")
             return {"user_id": 9999, "scopes": ["claudeai"]}
-    
-    db = next(get_db_connection())
+
+    service = UserService()
     try:
-        auth_token = db.query(MCPAccessToken).filter_by(token=token).first()
-        
+        auth_token = service.get_auth_token(token)
         if not auth_token or auth_token.expires_at < datetime.utcnow():
             if auth_token:
-                db.delete(auth_token)
-                db.commit()
+                service.delete_auth_token(auth_token)
             raise HTTPException(
                 status_code=401,
                 detail="Invalid or expired token",
@@ -87,7 +84,7 @@ async def verify_mcp_token(authorization: Optional[str] = Header(None)) -> dict:
         return {"user_id": auth_token.user_id, "scopes": auth_token.scope.split()}
         
     finally:
-        db.close()
+        logger.info(f"Authorization session ended for token: {token}")
 
 def create_access_token(user_id: int, expires_delta: int = 3600, scopes=None):
     expire = datetime.utcnow() + timedelta(seconds=expires_delta)

@@ -10,7 +10,7 @@ from app.utils.templates import login_form_html
 from app.auth.config import (
     INSTALL_KEY, generate_auth_code, logger, TOKEN_EXPIRY_HOURS, create_access_token, verify_code_challenge, ensure_claude_client
 )
-from app.core.db import get_db_connection
+
 from app.auth.state import oauth_sessions, registered_clients
 
 router = APIRouter()
@@ -91,10 +91,8 @@ async def process_authorization(
         logger.info(f"Redirecting (test user) via GET: {redirect_url}")
         return RedirectResponse(url=redirect_url, status_code=302)
 
-    # REAL user
-    db = next(get_db_connection())
     try:
-        service = UserService(db)
+        service = UserService()
         user = service.authenticate_user(username, password)
         if not user:
             # Invalid credentials: re-show form with error message
@@ -119,7 +117,7 @@ async def process_authorization(
         logger.info(f"Redirecting (real user) via GET: {redirect_url}")
         return RedirectResponse(url=redirect_url, status_code=302)
     finally:
-        db.close()
+        logger.info(f"Authorization session {auth_request_id} ended")
 
 @router.post("/token")
 async def token_endpoint(request: Request):
@@ -197,7 +195,6 @@ async def token_endpoint(request: Request):
                 "scope": code_data["scope"]
             }
 
-        # NORMAL user (no DB saving here but can be added)
         del oauth_sessions[code_key]
         return {
             "access_token": access_token,

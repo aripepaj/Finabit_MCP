@@ -1,7 +1,10 @@
 import requests
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from config import server_api_url
+from app.core.config import settings
+from requests.auth import HTTPBasicAuth
+
+from app.repositories.user_repository import _get_creds
 
 def fetch_sales(
     from_date: str,
@@ -13,40 +16,34 @@ def fetch_sales(
 ) -> List[Dict[str, Any]]:
     """
     Call the remote TransactionsList API endpoint
-    
-    Args:
-        from_date: Start date in string format
-        to_date: End date in string format
-        transaction_type_id: Type of transaction
-        item_id: Optional item ID filter
-        item_name: Optional item name filter
-        partner_name: Optional partner name filter
-    
-    Returns:
-        List of transaction orders
     """
-    
-    endpoint = f"{server_api_url}/TransactionsList"
-    
+    endpoint = f"{settings.server_api_url}/Transactions/TransactionsList"
+
     params = {
         "FromDate": from_date,
         "ToDate": to_date,
         "TransactionTypeID": transaction_type_id
     }
-    
     if item_id:
         params["ItemID"] = item_id
     if item_name:
         params["ItemName"] = item_name
     if partner_name:
         params["PartnerName"] = partner_name
-    
+
+    username, password = _get_creds()
+    if not username or not password:
+        raise RuntimeError("No saved credentials for Basic authentication.")
+
     try:
-        response = requests.get(endpoint, params=params, timeout=30)
-        response.raise_for_status() 
-        
+        response = requests.get(
+            endpoint,
+            params=params,
+            auth=HTTPBasicAuth(username, password),
+            timeout=30
+        )
+        response.raise_for_status()
         return response.json()
-        
     except requests.exceptions.RequestException as e:
         print(f"Error calling TransactionsList API: {e}")
         return []
