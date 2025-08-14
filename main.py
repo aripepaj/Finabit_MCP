@@ -1,9 +1,36 @@
 # main.py
-import os, logging, uuid, pathlib
+import os, sys, logging, uuid
+from pathlib import Path
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+
+def resource_path(*parts: str) -> Path:
+    """
+    Path to bundled, read-only resources.
+    In onefile builds, this points inside the PyInstaller temp (_MEIPASS).
+    In dev, it points to the folder containing this file.
+    """
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base = Path(sys._MEIPASS)
+    else:
+        base = Path(__file__).resolve().parent
+    return base.joinpath(*parts)
+
+def appdata_path(*parts: str) -> Path:
+    """
+    Persistent, user-writable path (e.g., %APPDATA%/FinabitMCP on Windows).
+    Use for files you create/write at runtime (like install.key).
+    """
+    appdata_root = os.getenv("APPDATA")
+    if appdata_root:
+        root = Path(appdata_root)
+    else:
+        root = Path.home() / ".finabitmcp"
+    d = root / "FinabitMCP"
+    d.mkdir(parents=True, exist_ok=True)
+    return d.joinpath(*parts)
 
 API_URL = os.getenv("API_URL", "http://localhost:5001")
 PORT    = int(os.getenv("PORT", "10000"))
@@ -12,17 +39,19 @@ from app.auth import oauth
 from app.main_ref import mcp
 from app.tools import sales_tool, purchases_tool, items_tool, help_tool
 
-BASE_DIR = pathlib.Path(__file__).resolve().parent
-KEY_PATH = BASE_DIR / "install.key"
+BASE_DIR = resource_path()
+
+KEY_PATH = appdata_path("install.key")
 if not KEY_PATH.exists():
     KEY_PATH.write_text(uuid.uuid4().hex, encoding="ascii")
 
 mcp_app = mcp.http_app(path="/")
 app = FastAPI(lifespan=mcp_app.lifespan)
 
-# static + routers
-if (BASE_DIR / "static").exists():
-    app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+static_dir = resource_path("static")
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 app.include_router(oauth.router)
 
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +67,7 @@ app.add_middleware(
 
 @app.get("/favicon.ico")
 async def favicon():
-    icon = BASE_DIR / "static" / "icon.ico"
+    icon = resource_path("static", "icon.ico")
     return FileResponse(str(icon)) if icon.exists() else JSONResponse({}, 200)
 
 @app.get("/health")

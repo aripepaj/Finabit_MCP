@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
@@ -35,12 +35,24 @@ jobs:
       - name: Build executable
         shell: pwsh
         run: |
-          # Adjust add-data lines to include any needed files/folders
           pyinstaller --onefile main.py --name FinabitMCP `
             --add-data "static;static" `
             --add-data "manifest.json;." `
-            --add-data ".env.template;."
-      
+            --add-data ".env.template;." `
+            --add-data "keys;keys" `
+            --collect-all "app" `
+            --collect-submodules "app"
+
+          if (-not (Test-Path "dist\FinabitMCP.exe")) {
+            Write-Error "dist\FinabitMCP.exe not found after build."
+          }
+
+      - name: Upload EXE artifact (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FinabitMCP-exe
+          path: dist/FinabitMCP.exe
+
       - name: Create ZIP
         id: zip
         shell: pwsh
