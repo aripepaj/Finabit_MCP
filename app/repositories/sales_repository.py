@@ -17,7 +17,7 @@ def fetch_sales(
     """
     Call the remote TransactionsList API endpoint
     """
-    endpoint = f"{settings.server_api_url}/Transactions/TransactionsList"
+    endpoint = f"{settings.server_api_url}/api/Transactions/TransactionsList"
 
     params = {
         "FromDate": from_date,

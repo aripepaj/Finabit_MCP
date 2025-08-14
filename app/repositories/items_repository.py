@@ -10,7 +10,7 @@ def fetch_items(page_number: int = 1, page_size: int = 20) -> Dict[str, Any]:
     Calls GET {server_api_url}/Items/GetAllItems and returns:
     { items: [...], total_count: int, total_pages: int, current_page: int }
     """
-    endpoint = f"{settings.server_api_url.rstrip('/')}/Items/GetAllItems"
+    endpoint = f"{settings.server_api_url.rstrip('/')}/api/Items/GetAllItems"
     params = {"pageNumber": page_number, "pageSize": page_size}
 
     username, password = _get_creds()

@@ -15,7 +15,7 @@ def fetch_purchases(
     """
     Call the remote PurchasesList API endpoint using Basic Auth creds from keyring.
     """
-    endpoint = f"{settings.server_api_url}/Transactions/TransactionsList"
+    endpoint = f"{settings.server_api_url}/api/Transactions/TransactionsList"
 
     params = {
         "FromDate": from_date,
