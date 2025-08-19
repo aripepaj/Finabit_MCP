@@ -25,29 +25,38 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install "pyinstaller>=6.6"
+
+      - name: Show PyInstaller version
+        shell: pwsh
+        run: pyinstaller --version
 
       - name: Determine tag
         id: vars
         shell: bash
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
+      # Build in ONE logical line using YAML folded scalar (>)
       - name: Build executable
         shell: pwsh
-        run: |
-          pyinstaller --onefile main.py --name FinabitMCP `
-            --add-data "static;static" `
-            --add-data "manifest.json;." `
-            --add-data ".env.template;." `
-            --add-data "keys;keys" `
-            --collect-all "app" `
-            --collect-submodules "app"
-            --collect-all fastmcp `
-            --collect-metadata fastmcp `
-            --hidden-import fastmcp
+        run: >
+          pyinstaller --onefile main.py --name FinabitMCP
+          --add-data "static;static"
+          --add-data "manifest.json;."
+          --add-data ".env.template;."
+          --add-data "keys;keys"
+          --collect-all app
+          --collect-submodules app
+          --collect-all fastmcp
+          --collect-metadata fastmcp
+          --hidden-import fastmcp
+          --clean
 
-          if (-not (Test-Path "dist\FinabitMCP.exe")) {
-            Write-Error "dist\FinabitMCP.exe not found after build."
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'dist\FinabitMCP.exe')) {
+            Write-Error 'dist\FinabitMCP.exe not found after build.'
           }
 
       - name: Upload EXE artifact (debug)
