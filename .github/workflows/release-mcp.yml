@@ -49,6 +49,7 @@ jobs:
           --add-data "manifest.json;."
           --add-data ".env.template;."
           --add-data "keys/public.pem;keys"
+          --add-data "keys/private.pem;keys"
           --collect-all "app"
           --collect-submodules "app"
           --collect-all "fastmcp"
