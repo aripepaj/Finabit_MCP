@@ -6,6 +6,19 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
+import importlib.metadata
+try:
+    import fastmcp  
+    try:
+        _ = importlib.metadata.version("fastmcp")
+    except importlib.metadata.PackageNotFoundError:
+        import types
+        if not hasattr(fastmcp, "__version__"):
+            fastmcp.__version__ = "0.0.0"
+except Exception:
+    pass
+
+
 try:
     from dotenv import load_dotenv  # add `python-dotenv` to requirements.txt
     load_dotenv()                   # reads .env in the working directory

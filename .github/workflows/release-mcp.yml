@@ -42,6 +42,9 @@ jobs:
             --add-data "keys;keys" `
             --collect-all "app" `
             --collect-submodules "app"
+            --collect-all fastmcp `
+            --collect-metadata fastmcp `
+            --hidden-import fastmcp
 
           if (-not (Test-Path "dist\FinabitMCP.exe")) {
             Write-Error "dist\FinabitMCP.exe not found after build."
