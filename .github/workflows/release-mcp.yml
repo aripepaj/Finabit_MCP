@@ -48,7 +48,7 @@ jobs:
           --add-data "static;static"
           --add-data "manifest.json;."
           --add-data ".env.template;."
-          --add-data "keys;keys"
+          --add-data "keys/public.pem;keys"
           --collect-all "app"
           --collect-submodules "app"
           --collect-all "fastmcp"
