@@ -35,13 +35,6 @@ jobs:
           pip -V
           pyinstaller --version
 
-      - name: Verify fastmcp is installed
-        shell: pwsh
-        run: |
-          if (-not (pip show fastmcp)) {
-            Write-Error "Dependency 'fastmcp' is not installed. Ensure it's in requirements.txt or configured via a private index."
-          }
-
       - name: Determine tag
         id: vars
         shell: bash
@@ -59,7 +52,7 @@ jobs:
           --collect-all "app"
           --collect-submodules "app"
           --collect-all "fastmcp"
-          --collect-metadata "fastmcp"
+          --copy-metadata "fastmcp"
           --hidden-import "fastmcp"
           --log-level DEBUG
           --clean
