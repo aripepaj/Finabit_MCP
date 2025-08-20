@@ -100,12 +100,20 @@ app.mount("/mcp", mcp_app)
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info(f"Starting MCP on :{PORT} (API_URL={API_URL})")
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=PORT,
-        ssl_certfile=SSL_CERTFILE,
-        ssl_keyfile=SSL_KEYFILE,
-        proxy_headers=True,
-        forwarded_allow_ips="*")
+
+    args = set(sys.argv[1:])
+    want_stdio = ("--stdio" in args) or (os.getenv("MCP_STDIO") == "1")
+
+    if want_stdio:
+        mcp.run()
+    else:
+        logger.info(f"Starting MCP on :{PORT} (API_URL={API_URL})")
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=PORT,
+            ssl_certfile=SSL_CERTFILE,
+            ssl_keyfile=SSL_KEYFILE,
+            proxy_headers=True,
+            forwarded_allow_ips="*",
+        )
