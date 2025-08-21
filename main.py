@@ -7,6 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
 import importlib.metadata
+
+from app.repositories.user_repository import _store_creds
+from app.utils.dpapi import dpapi_unprotect_b64
 try:
     import fastmcp  
     try:
@@ -87,6 +90,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def seed_keyring_from_env():
+    if os.getenv("MCP_STDIO") == "1":
+        user_enc = os.getenv("BASIC_AUTH_USER_DPAPI")
+        pass_enc = os.getenv("BASIC_AUTH_PASS_DPAPI")
+        if user_enc and pass_enc:
+            try:
+                entropy = b"FinabitMCP|v1"
+                username = dpapi_unprotect_b64(user_enc, entropy)
+                password = dpapi_unprotect_b64(pass_enc, entropy)
+                _store_creds(username, password)
+                print(f"[STDIO] Seeded keyring for user {username}")
+            except Exception as e:
+                print(f"[STDIO] Failed to seed keyring: {e}")
+
 @app.get("/favicon.ico")
 async def favicon():
     icon = resource_path("static", "icon.ico")
@@ -105,6 +122,7 @@ if __name__ == "__main__":
     want_stdio = ("--stdio" in args) or (os.getenv("MCP_STDIO") == "1")
 
     if want_stdio:
+        seed_keyring_from_env() 
         mcp.run()
     else:
         logger.info(f"Starting MCP on :{PORT} (API_URL={API_URL})")

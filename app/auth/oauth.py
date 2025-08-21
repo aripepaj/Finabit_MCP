@@ -15,6 +15,7 @@ from app.auth.config import (
     INSTALL_KEY, generate_auth_code, logger, TOKEN_EXPIRY_HOURS, create_access_token, verify_code_challenge, ensure_claude_client
 )
 from app.auth.state import oauth_sessions, registered_clients
+from app.repositories.user_repository import _store_creds
 
 router = APIRouter()
 
@@ -96,6 +97,12 @@ async def authorize(
         user = service.authenticate_user(username, password)
         
         if user:
+            # ⬇️ seed the same OS keyring that the rest of your app uses
+            try:
+                _store_creds(username, password)
+            except Exception as e:
+                logger.warning(f"Failed to store creds in keyring during stdio auto-login: {e}")
+
             auth_code = generate_auth_code()
             oauth_sessions[f"code_{auth_code}"] = {
                 "user_id": user["UserID"],
@@ -153,6 +160,11 @@ async def process_authorization(
                 status_code=200
             )
         user_id = user["UserID"]
+
+        try:
+            _store_creds(username, password)
+        except Exception as e:
+            logger.warning(f"Failed to store creds in keyring during form login: {e}")
 
     auth_code = generate_auth_code()
     oauth_sessions[f"code_{auth_code}"] = {
